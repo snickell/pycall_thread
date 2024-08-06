@@ -8,4 +8,4 @@ sleep 3
 echo 'About to do a wget which will crash puma...'
 sleep 1
 
-wget http://localhost:9292
+curl http://localhost:9292
