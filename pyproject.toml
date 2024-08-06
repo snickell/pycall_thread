@@ -1,0 +1,19 @@
+[project]
+requires-python = "==3.12.*"
+
+dependencies = [
+    "llm-guard>=0.3.14",
+    "pandas",
+]
+
+[tool.pdm]
+distribution = false
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "ipython>=8.26.0",
+]
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
