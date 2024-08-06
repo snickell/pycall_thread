@@ -6,15 +6,15 @@ but does not crash when run outside Puma. Puma is configured to only spawn one t
 The PyCall code that crashes puma is (in ruby, see `crash_puma.rb`):
 
 ```
-input_scanners = PyCall.import_module('llm_guard.input_scanners')
-input_scanners.Toxicity() # SEGV if run in puma, works if run directly
+pandas = PyCall.import_module('pandas')
+data = pandas.read_csv('https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv', sep: ';')
 ```
 
 The equivalent in python would be:
 
 ```
-from llm_guard import input_scanners
-input_scanners.Toxicity()
+import pandas
+data = pandas.read_csv('https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv', sep=';')
 ```
 
 ## Setup
@@ -50,15 +50,12 @@ Puma starting in single mode...
 *  Min threads: 1
 *  Max threads: 1
 *  Environment: development
-*          PID: 20025
+*          PID: 48554
 * Listening on http://0.0.0.0:9292
 Use Ctrl-C to stop
-About to do a wget which will crash puma...
---2024-08-06 04:01:08--  http://localhost:9292/
-Resolving localhost (localhost)... ::1, 127.0.0.1
-Connecting to localhost (localhost)|::1|:9292... failed: Connection refused.
-Connecting to localhost (localhost)|127.0.0.1|:9292... connected.
-HTTP request sent, awaiting response... /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/pycall-1.5.2/lib/pycall.rb:82: [BUG] Segmentation fault at 0x0000000000000010
+About to do a curl which will crash puma...
+About to crash (if running in puma)
+/Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/pycall-1.5.2/lib/pycall.rb:82: [BUG] Segmentation fault at 0x0000000000000010
 ruby 3.0.5p211 (2022-11-24 revision ba5cf0f7c5) [arm64-darwin23]
 
 -- Crash Report log information --------------------------------------------
@@ -69,9 +66,9 @@ ruby 3.0.5p211 (2022-11-24 revision ba5cf0f7c5) [arm64-darwin23]
 Don't forget to include the above Crash Report log file in bug reports.
 
 -- Control frame information -----------------------------------------------
-c:0012 p:---- s:0077 e:000076 CFUNC  :import_module
-c:0011 p:0017 s:0072 e:000071 METHOD /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/pycall-1.5.2/lib/pycall.rb:82
-c:0010 p:0013 s:0067 e:000066 METHOD /Users/seth/src/pycall_puma_crash/crash_puma.rb:16
+c:0012 p:---- s:0078 e:000077 CFUNC  :import_module
+c:0011 p:0017 s:0073 e:000072 METHOD /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/pycall-1.5.2/lib/pycall.rb:82
+c:0010 p:0019 s:0068 e:000067 METHOD /Users/seth/src/pycall_puma_crash/crash_puma.rb:18
 c:0009 p:0011 s:0062 e:000061 METHOD /Users/seth/src/pycall_puma_crash/app.rb:5
 c:0008 p:0028 s:0057 e:000056 METHOD /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/puma-6.4.2/lib/puma/configuration.rb:272
 c:0007 p:0008 s:0052 e:000051 BLOCK  /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/puma-6.4.2/lib/puma/request.rb:100
@@ -91,7 +88,7 @@ c:0001 p:---- s:0003 e:000002 (none) [FINISH]
 /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/puma-6.4.2/lib/puma/request.rb:100:in `block in handle_request'
 /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/puma-6.4.2/lib/puma/configuration.rb:272:in `call'
 /Users/seth/src/pycall_puma_crash/app.rb:5:in `call'
-/Users/seth/src/pycall_puma_crash/crash_puma.rb:16:in `do_crash'
+/Users/seth/src/pycall_puma_crash/crash_puma.rb:18:in `do_crash'
 /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/pycall-1.5.2/lib/pycall.rb:82:in `import_module'
 /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/pycall-1.5.2/lib/pycall.rb:82:in `import_module'
 
@@ -302,202 +299,197 @@ c:0001 p:---- s:0003 e:000002 (none) [FINISH]
 
 * Process memory map:
 
-102cc0000-102cc4000 r-x /Users/seth/.rbenv/versions/3.0.5/bin/ruby
-102cc4000-102cc8000 r-- /Users/seth/.rbenv/versions/3.0.5/bin/ruby
-102cc8000-102ccc000 r-- /Users/seth/.rbenv/versions/3.0.5/bin/ruby
-102ccc000-102cd0000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/enc/encdb.bundle
-102cd0000-102cd4000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/enc/encdb.bundle
-102cdc000-102ce0000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/enc/encdb.bundle
-102ce0000-102ce4000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/enc/encdb.bundle
-102ce4000-102ce8000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/enc/encdb.bundle
-102ce8000-102cec000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/enc/encdb.bundle
-102cec000-102cf0000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/enc/trans/transdb.bundle
-102cf0000-102cf4000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/enc/trans/transdb.bundle
-102cf4000-102cf8000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/enc/trans/transdb.bundle
-102cf8000-102cfc000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/enc/trans/transdb.bundle
-102d0c000-102d10000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/monitor.bundle
-102d10000-102d14000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/monitor.bundle
-102d14000-102d18000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/monitor.bundle
-102d18000-102d1c000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/monitor.bundle
-102d1c000-102d20000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/io/wait.bundle
-102d20000-102d24000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/io/wait.bundle
-102d24000-102d28000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/io/wait.bundle
-102d28000-102d2c000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/io/wait.bundle
-102d2c000-102d30000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/etc.bundle
-102d30000-102d34000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/etc.bundle
-102d34000-102d38000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/etc.bundle
-102d38000-102d3c000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/etc.bundle
-102d58000-102d7c000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/socket.bundle
-102d7c000-102d80000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/socket.bundle
-102d80000-102d84000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/socket.bundle
-102d84000-102d94000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/socket.bundle
-102d94000-102dd4000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
-102dd4000-102ddc000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
-102ddc000-102de0000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
-102de0000-102de4000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
-102de4000-102de8000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
-102de8000-102df0000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/puma-6.4.2/lib/puma/puma_http11.bundle
-102df0000-102df4000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/puma-6.4.2/lib/puma/puma_http11.bundle
-102df4000-102df8000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/puma-6.4.2/lib/puma/puma_http11.bundle
-102df8000-102dfc000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/puma-6.4.2/lib/puma/puma_http11.bundle
-102dfc000-102e04000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/fiddle.bundle
-102e04000-102e08000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/fiddle.bundle
-102e08000-102e0c000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/fiddle.bundle
-102e0c000-102e14000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/fiddle.bundle
-102e14000-102e1c000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/pathname.bundle
-102e1c000-102e20000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/pathname.bundle
-102e20000-102e24000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/pathname.bundle
-102e24000-102e28000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/pathname.bundle
-102e28000-102e34000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/nio4r-2.7.3/lib/nio4r_ext.bundle
-102e34000-102e38000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/nio4r-2.7.3/lib/nio4r_ext.bundle
-102e38000-102e3c000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/nio4r-2.7.3/lib/nio4r_ext.bundle
-102e3c000-102e44000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/nio4r-2.7.3/lib/nio4r_ext.bundle
-102e48000-102e58000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/pycall-1.5.2/lib/pycall.bundle
-102e58000-102e5c000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/pycall-1.5.2/lib/pycall.bundle
-102e5c000-102e60000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/pycall-1.5.2/lib/pycall.bundle
-102e60000-102e68000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/pycall-1.5.2/lib/pycall.bundle
-102e78000-102ec4000 r-x /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libssl.1.1.dylib
-102ec4000-102ed0000 r-- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libssl.1.1.dylib
-102ed0000-102ed4000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libssl.1.1.dylib
-102ed4000-102ef4000 r-- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libssl.1.1.dylib
-102f00000-103000000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-1030d0000-103110000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-103110000-103114000 --- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-103114000-10311c000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-10311c000-103120000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-103120000-103124000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-103124000-103128000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-103128000-10312c000 --- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-10312c000-103138000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-103138000-10313c000 --- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-10313c000-103140000 --- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-103140000-10314c000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-10314c000-103150000 --- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-103150000-103154000 --- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-103154000-103160000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-103160000-103164000 --- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-103164000-103168000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-103168000-103268000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-103300000-103400000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-1034d4000-1037b8000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-1037b8000-1037c0000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-1037c0000-1037c4000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-1037c4000-1037d0000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-1037d0000-1038a0000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
-1038a0000-1038a4000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-1038a4000-103948000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-103948000-10394c000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-10394c000-1039f0000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-1039f0000-1039f4000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-1039f4000-103a98000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-103a98000-103a9c000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-103a9c000-103b40000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-103b40000-103b44000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-103b44000-103be8000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-103be8000-103bec000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-103bec000-103c90000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-103c90000-103c94000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-103c94000-103d38000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-103d38000-103d3c000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-103d3c000-103de0000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-103de0000-103de4000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-103de4000-103e88000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-103e88000-103e8c000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-103e8c000-103f30000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-103f30000-103f34000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-103f34000-103fd8000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-103fd8000-103fdc000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-103fdc000-104080000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104080000-104084000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104084000-104128000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104128000-10412c000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-10412c000-1041d0000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-1041d0000-1041d4000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-1041d4000-104278000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104278000-10427c000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-10427c000-104320000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104320000-104324000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104324000-1043c8000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-1043c8000-1043cc000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-1043cc000-104470000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104470000-104474000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104474000-104518000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104518000-10451c000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-10451c000-1045c0000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-1045c0000-1045c4000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-1045c4000-104668000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104668000-10466c000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-10466c000-104710000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104710000-104714000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104714000-1047b8000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-1047b8000-1047bc000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-1047bc000-104860000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104860000-104864000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104864000-104908000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104908000-10490c000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-10490c000-1049b0000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-1049b0000-1049b4000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-1049b4000-104a58000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104a58000-104a5c000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104a5c000-104b00000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104b00000-104b04000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104b04000-104ba8000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104ba8000-104bac000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104bac000-104c50000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104c50000-104c54000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104c54000-104cf8000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104cf8000-104cfc000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104cfc000-104da0000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104da0000-104f20000 r-x /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104f20000-104f4c000 r-- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104f4c000-104f50000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104f50000-104f54000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-104f54000-104fbc000 r-- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
-105000000-105800000 rw- /opt/homebrew/Cellar/python@3.12/3.12.4/Frameworks/Python.framework/Versions/3.12/Python
-105800000-105900000 rw- /opt/homebrew/Cellar/python@3.12/3.12.4/Frameworks/Python.framework/Versions/3.12/Python
-105dbc000-1060e0000 r-x /opt/homebrew/Cellar/python@3.12/3.12.4/Frameworks/Python.framework/Versions/3.12/Python
-1060e0000-106158000 r-- /opt/homebrew/Cellar/python@3.12/3.12.4/Frameworks/Python.framework/Versions/3.12/Python
-106158000-1062b4000 rw- /opt/homebrew/Cellar/python@3.12/3.12.4/Frameworks/Python.framework/Versions/3.12/Python
-1062b4000-106378000 r-- /opt/homebrew/Cellar/python@3.12/3.12.4/Frameworks/Python.framework/Versions/3.12/Python
-106800000-107000000 rw-
-10be00000-10bf00000 rw-
-10bf00000-10c000000 rw-
-10c000000-10c100000 rw-
-10c100000-10c200000 rw-
-10c800000-10d000000 rw-
+100030000-100034000 r-x /Users/seth/.rbenv/versions/3.0.5/bin/ruby
+100034000-100038000 r-- /Users/seth/.rbenv/versions/3.0.5/bin/ruby
+100038000-10003c000 r-- /Users/seth/.rbenv/versions/3.0.5/bin/ruby
+10003c000-100040000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/enc/encdb.bundle
+100040000-100044000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/enc/encdb.bundle
+10004c000-100050000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/enc/encdb.bundle
+100050000-100054000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/enc/encdb.bundle
+100054000-100058000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/enc/encdb.bundle
+100058000-10005c000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/enc/encdb.bundle
+10005c000-100060000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/enc/trans/transdb.bundle
+100060000-100064000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/enc/trans/transdb.bundle
+100064000-100068000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/enc/trans/transdb.bundle
+100068000-10006c000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/enc/trans/transdb.bundle
+10007c000-100080000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/monitor.bundle
+100080000-100084000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/monitor.bundle
+100084000-100088000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/monitor.bundle
+100088000-10008c000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/monitor.bundle
+10008c000-100090000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/io/wait.bundle
+100090000-100094000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/io/wait.bundle
+100094000-100098000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/io/wait.bundle
+100098000-10009c000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/io/wait.bundle
+10009c000-1000a0000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/etc.bundle
+1000a0000-1000a4000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/etc.bundle
+1000a4000-1000a8000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/etc.bundle
+1000a8000-1000ac000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/etc.bundle
+1000ac000-1000ec000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/socket.bundle
+100100000-100200000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/socket.bundle
+100200000-100300000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/socket.bundle
+100300000-100400000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/socket.bundle
+100400000-100424000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/socket.bundle
+100424000-100428000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/socket.bundle
+100428000-10042c000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/socket.bundle
+10042c000-10043c000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/socket.bundle
+100440000-100480000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
+100480000-100484000 --- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
+100484000-10048c000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
+10048c000-100490000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
+100490000-100494000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
+100494000-100498000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
+100498000-10049c000 --- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
+10049c000-1004a8000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
+1004a8000-1004ac000 --- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
+1004ac000-1004b0000 --- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
+1004b0000-1004bc000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
+1004bc000-1004c0000 --- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
+1004c0000-1004c4000 --- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
+1004c4000-1004d0000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
+1004d0000-1004d4000 --- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
+1004d4000-1004d8000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
+1004d8000-1004e0000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
+1004e0000-1004e4000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
+1004e4000-1004e8000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
+1004e8000-1004ec000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/stringio-3.1.1/lib/stringio.bundle
+1004ec000-1004f4000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/puma-6.4.2/lib/puma/puma_http11.bundle
+1004f4000-1004f8000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/puma-6.4.2/lib/puma/puma_http11.bundle
+1004f8000-1004fc000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/puma-6.4.2/lib/puma/puma_http11.bundle
+1004fc000-100500000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/puma-6.4.2/lib/puma/puma_http11.bundle
+100500000-100508000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/pathname.bundle
+100508000-10050c000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/pathname.bundle
+10050c000-100510000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/pathname.bundle
+100510000-100514000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/pathname.bundle
+100518000-100520000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/fiddle.bundle
+100520000-100524000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/fiddle.bundle
+100524000-100528000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/fiddle.bundle
+100528000-100530000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/3.0.0/arm64-darwin23/fiddle.bundle
+100550000-100560000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/pycall-1.5.2/lib/pycall.bundle
+100560000-100564000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/pycall-1.5.2/lib/pycall.bundle
+100564000-100568000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/pycall-1.5.2/lib/pycall.bundle
+100568000-100570000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/pycall-1.5.2/lib/pycall.bundle
+10057c000-1005c8000 r-x /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libssl.1.1.dylib
+1005c8000-1005d4000 r-- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libssl.1.1.dylib
+1005d4000-1005d8000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libssl.1.1.dylib
+1005d8000-1005f8000 r-- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libssl.1.1.dylib
+100600000-100700000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/nio4r-2.7.3/lib/nio4r_ext.bundle
+100700000-100800000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/nio4r-2.7.3/lib/nio4r_ext.bundle
+100800000-10080c000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/nio4r-2.7.3/lib/nio4r_ext.bundle
+10080c000-100810000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/nio4r-2.7.3/lib/nio4r_ext.bundle
+100810000-100814000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/nio4r-2.7.3/lib/nio4r_ext.bundle
+100814000-10081c000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/ruby/gems/3.0.0/gems/nio4r-2.7.3/lib/nio4r_ext.bundle
+100844000-100b28000 r-x /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
+100b28000-100b30000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
+100b30000-100b34000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
+100b34000-100b40000 rw- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
+100b40000-100c10000 r-- /Users/seth/.rbenv/versions/3.0.5/lib/libruby.3.0.dylib
+100c10000-100c14000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+100c14000-100cb8000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+100cb8000-100cbc000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+100cbc000-100d60000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+100d60000-100d64000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+100d64000-100e08000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+100e08000-100e0c000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+100e0c000-100eb0000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+100eb0000-100eb4000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+100eb4000-100f58000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+100f58000-100f5c000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+100f5c000-101000000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101000000-101004000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101004000-1010a8000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+1010a8000-1010ac000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+1010ac000-101150000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101150000-101154000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101154000-1011f8000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+1011f8000-1011fc000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+1011fc000-1012a0000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+1012a0000-1012a4000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+1012a4000-101348000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101348000-10134c000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+10134c000-1013f0000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+1013f0000-1013f4000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+1013f4000-101498000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101498000-10149c000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+10149c000-101540000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101540000-101544000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101544000-1015e8000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+1015e8000-1015ec000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+1015ec000-101690000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101690000-101694000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101694000-101738000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101738000-10173c000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+10173c000-1017e0000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+1017e0000-1017e4000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+1017e4000-101888000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101888000-10188c000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+10188c000-101930000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101930000-101934000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101934000-1019d8000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+1019d8000-1019dc000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+1019dc000-101a80000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101a80000-101a84000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101a84000-101b28000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101b28000-101b2c000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101b2c000-101bd0000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101bd0000-101bd4000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101bd4000-101c78000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101c78000-101c7c000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101c7c000-101d20000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101d20000-101d24000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101d24000-101dc8000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101dc8000-101dcc000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101dcc000-101e70000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101e70000-101e74000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101e74000-101f18000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101f18000-101f1c000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101f1c000-101fc0000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101fc0000-101fc4000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+101fc4000-102068000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+102068000-10206c000 --- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+10206c000-102110000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+102110000-102290000 r-x /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+102290000-1022bc000 r-- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+1022bc000-1022c0000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+1022c0000-1022c4000 rw- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+1022c4000-10232c000 r-- /opt/homebrew/Cellar/openssl@1.1/1.1.1w/lib/libcrypto.1.1.dylib
+102400000-102500000 rw- /opt/homebrew/Cellar/python@3.12/3.12.4/Frameworks/Python.framework/Versions/3.12/Python
+102500000-102600000 rw- /opt/homebrew/Cellar/python@3.12/3.12.4/Frameworks/Python.framework/Versions/3.12/Python
+102600000-102700000 rw- /opt/homebrew/Cellar/python@3.12/3.12.4/Frameworks/Python.framework/Versions/3.12/Python
+102800000-103000000 rw- /opt/homebrew/Cellar/python@3.12/3.12.4/Frameworks/Python.framework/Versions/3.12/Python
+103000000-103800000 rw- /opt/homebrew/Cellar/python@3.12/3.12.4/Frameworks/Python.framework/Versions/3.12/Python
+103dbc000-1040e0000 r-x /opt/homebrew/Cellar/python@3.12/3.12.4/Frameworks/Python.framework/Versions/3.12/Python
+1040e0000-104158000 r-- /opt/homebrew/Cellar/python@3.12/3.12.4/Frameworks/Python.framework/Versions/3.12/Python
+104158000-1042b4000 rw- /opt/homebrew/Cellar/python@3.12/3.12.4/Frameworks/Python.framework/Versions/3.12/Python
+1042b4000-104378000 r-- /opt/homebrew/Cellar/python@3.12/3.12.4/Frameworks/Python.framework/Versions/3.12/Python
+10ee00000-10ef00000 rw-
+10f000000-10f800000 rw-
 110000000-118000000 rw-
-11be00000-11bf00000 rw-
-11bf00000-11c000000 rw-
-11c000000-11c800000 rw-
+11ee00000-11ef00000 rw-
+11f000000-11f800000 rw-
 120000000-128000000 rw-
-12be00000-12bf00000 rw-
-12bf00000-12c000000 rw-
-12c000000-12c800000 rw-
+12ee00000-12ef00000 rw-
+12ef00000-12ef04000 rw-
+12f000000-12f800000 rw-
+12f800000-12f900000 rw-
 130000000-138000000 rw-
-13be00000-13bf00000 rw-
-13bf00000-13bf04000 rw-
-13c000000-13c800000 rw-
-13c800000-13e800000 rw-
-13e800000-13e900000 rw-
-13f000000-13f800000 rw-
+138000000-13a000000 rw-
+13a000000-13a800000 rw-
 140000000-148000000 rw-
 148000000-150000000 rw-
-150000000-158000000 rw-
-158000000-160000000 rw-
-169140000-16c944000 ---
-16c944000-16d140000 rw-
-16d140000-16d144000 ---
-16d144000-16d1cc000 rw-
-16d1cc000-16d1d0000 ---
-16d1d0000-16d3d8000 rw-
-16d3d8000-16d3dc000 ---
-16d3dc000-16d5e4000 rw-
-16d5e4000-16d5e8000 ---
-16d5e8000-16d7f0000 rw-
-16d7f0000-16d7f4000 ---
-16d7f4000-16d9fc000 rw-
-16d9fc000-16da00000 ---
-16da00000-16dc08000 rw-
+16bdd0000-16f5d4000 ---
+16f5d4000-16fdd0000 rw-
+16fdd0000-16fdd4000 ---
+16fdd4000-16fe5c000 rw-
+16fe5c000-16fe60000 ---
+16fe60000-170068000 rw-
+170068000-17006c000 ---
+17006c000-170274000 rw-
+170274000-170278000 ---
+170278000-170480000 rw-
+170480000-170484000 ---
+170484000-17068c000 rw-
+17068c000-170690000 ---
+170690000-170898000 rw-
 180000000-1f4000000 r--
 1f4000000-1f57f8000 r--
 1f57f8000-1f581c000 rw-
@@ -518,13 +510,7 @@ fc0000000-1000000000 ---
 Don't forget to include the Crash Report log file under
 DiagnosticReports directory in bug reports.
 
-No data received.
-Retrying.
-
---2024-08-06 04:01:09--  (try: 2)  http://localhost:9292/
-Connecting to localhost (localhost)|127.0.0.1|:9292... failed: Connection refused.
-Resolving localhost (localhost)... ::1, 127.0.0.1
-Connecting to localhost (localhost)|::1|:9292... failed: Connection refused.
-Connecting to localhost (localhost)|127.0.0.1|:9292... failed: Connection refused.
-./crash_puma.sh: line 11: 20025 Abort trap: 6           puma -C puma.rb config.ru
+curl: (52) Empty reply from server
+./crash_puma.sh: line 10: 48554 Abort trap: 6           puma -C puma.rb config.ru
+./crash_puma.sh: line 12: kill: (48554) - No such process
 ```

@@ -15,8 +15,9 @@ module CrashPuma
   def self.do_crash
     puts "About to crash (if running in puma)"
 
-    input_scanners = PyCall.import_module('llm_guard.input_scanners')
-    input_scanners.Toxicity() # SEGV if run in puma, works if run directly
+    pandas = PyCall.import_module('pandas')
+    data = pandas.read_csv('https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv', sep: ';')
+    puts data.head()
 
     puts "IT DID NOT CRASH"
   end
