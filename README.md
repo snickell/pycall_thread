@@ -1,5 +1,7 @@
 # PyCall crash when run within Puma
 
+See: https://github.com/mrkn/pycall.rb/issues/185
+
 Minimal repro of a call to a python library that crashes when run inside Puma (e.g. Ruby on Rails)
 but does not crash when run outside Puma. Puma is configured to only spawn one thread (see puma.rb).
 
