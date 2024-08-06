@@ -5,6 +5,7 @@ ENV['PYTHON'] = `pdm run which python`.strip
 site_dir = `pdm run python -c 'import site; print(site.getsitepackages()[0])'`.strip
 
 require 'pycall'
+$pycall_thread_id = Thread.current.object_id
 
 # This is to setup our local venv
 site = PyCall.import_module('site')
@@ -13,6 +14,8 @@ site.addsitedir(site_dir)
 module CrashPuma
 
   def self.do_crash
+    raise "Thread IDs did not match: started with thread #{$pycall_thread_id}, but request is on thread #{Thread.current.object_id}" if $pycall_thread_id != Thread.current.object_id
+
     puts "About to crash (if running in puma)"
 
     pandas = PyCall.import_module('pandas')
