@@ -1,32 +1,32 @@
 #!/usr/bin/env ruby
 
-# Setup our local venv (using pdm, in .venv)
-ENV['PYTHON'] = `pdm run which python`.strip
-site_dir = `pdm run python -c 'import site; print(site.getsitepackages()[0])'`.strip
-
-require 'pycall'
-$pycall_thread_id = Thread.current.object_id
-
-# This is to setup our local venv
-site = PyCall.import_module('site')
-site.addsitedir(site_dir)
+require_relative './pycall_thread'
 
 module CrashPuma
+  PyCallThread.init do
+    # Setup our local venv (using pdm, in .venv)
+    ENV['PYTHON'] = `pdm run which python`.strip
+    site_dir = `pdm run python -c 'import site; print(site.getsitepackages()[0])'`.strip
+
+    require 'pycall'
+
+    # # This is to setup our local venv
+    site = PyCall.import_module('site')
+    site.addsitedir(site_dir)
+
+    PyCall.import_module('sys')
+  end
 
   def self.do_crash
-    raise "Thread IDs did not match: started with thread #{$pycall_thread_id}, but request is on thread #{Thread.current.object_id}" if $pycall_thread_id != Thread.current.object_id
-
-    puts "About to crash (if running in puma)"
-
-    pandas = PyCall.import_module('pandas')
-    data = pandas.read_csv('https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv', sep: ';')
-    puts data.head()
-
-    puts "IT DID NOT CRASH"
+    data = PyCallThread.run do
+      pandas = PyCall.import_module('pandas')
+      data = pandas.read_csv('https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv', sep: ';')
+      data.head().inspect
+    end
+    puts "Got result from thread: #{data}"
   end
 end
 
 if __FILE__ == $0
-  # Does not crash if run like `./crash_puma.rb`, try `./crash_puma.sh` instead to see a crash
   CrashPuma.do_crash
 end

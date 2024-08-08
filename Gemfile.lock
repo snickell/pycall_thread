@@ -1,17 +1,21 @@
+PATH
+  remote: /Users/seth/src/pycall.rb
+  specs:
+    pycall (1.5.2)
+
 GEM
   remote: https://rubygems.org/
   specs:
     nio4r (2.7.3)
     puma (6.4.2)
       nio4r (~> 2.0)
-    pycall (1.5.2)
 
 PLATFORMS
   arm64-darwin-23
 
 DEPENDENCIES
   puma (~> 6.4.1)
-  pycall
+  pycall!
 
 BUNDLED WITH
    2.3.22
