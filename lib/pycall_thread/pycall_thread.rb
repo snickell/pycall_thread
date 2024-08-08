@@ -20,7 +20,9 @@ module PyCallThread
     # instead of doing it directly.
     @py_thread = Thread.new { pycall_thread_loop(&require_pycall_block) }
 
-    at_exit { stop_pycall_thread }
+    at_exit do
+      stop_pycall_thread
+    end
 
     nil
   end
@@ -30,26 +32,34 @@ module PyCallThread
     init unless @initialized
 
     result_queue = Queue.new
-    @queue << -> { result_queue << block.call }
-    retval = result_queue.pop
-
-    puts "pycall_thread.done, retval = #{retval.inspect}"
-
-    if python_object?(retval)
-      case @unsafe_return
-      when :error
-        raise "Trying to return a python object from PyCDO.lock_python_gil block is potentially not thread-safe. Please convert it to a basic Ruby type (like string, array, number, boolean etc) before returning."
-      when :warn
-        warn "Warning: Returning a Python object from PyCDO.lock_python_gil block is potentially not thread-safe. Please convert it to a basic Ruby type (like string, array, number, boolean etc) before returning."
+    @queue << -> do
+      begin
+        result_queue << { retval: block.call }
+      rescue => e
+        result_queue << { exception: e }
       end
     end
 
-    puts "returning from pycall.run"
-    retval
+    result = result_queue.pop
+
+    if result[:exception]
+      raise result[:exception]
+    elsif python_object?(result[:retval])
+      msg = "Trying to return a python object from a PyCallThread.run block is potentially not thread-safe. Please convert #{result.inspect} to a basic Ruby type (like string, array, number, boolean etc) before returning."
+      case @unsafe_return
+      when :error
+        raise msg
+      when :warn
+        warn "Warning: #{msg}"
+      end
+    end
+
+    result[:retval]
   end
 
   def self.stop_pycall_thread
     @queue << :stop
+    @py_thread.join
   end
 
   def self.pycall_thread_loop(&require_pycall_block)
@@ -68,6 +78,7 @@ module PyCallThread
       block.call
     rescue => e
       puts "pycall_thread_loop(): exception in pycall_thread_loop #{e}"
+      puts e.backtrace.join("\n")
     end
 
     # If PyCall.finalize is not present, the main proces will hang at exit
