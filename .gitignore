@@ -1,2 +1,13 @@
+# Python
 .venv
 .pdm-build
+
+# Gem
+/.bundle/
+/.yardoc
+/_yardoc/
+/coverage/
+/doc/
+/pkg/
+/spec/reports/
+/tmp/
