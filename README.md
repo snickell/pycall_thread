@@ -1,35 +1,50 @@
-# PycallThread
+# PyCallThread
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/pycall_thread`. To experiment with that code, run `bin/console` for an interactive prompt.
+PyCallThread provides `PyCallThread.run(&block)`, which lets you safely run a block of
+[pycall.rb](https://github.com/mrkn/pycall.rb) code: even if you're in a thread.
 
-TODO: Delete this and the text above, and describe your gem
+This makes PyCall easier to use from Ruby on Rails, Puma and other threaded web servers.
+
+## Usage
+
+```
+require 'pycall_thread'
+
+# Initialization is optional but gives you a few config settings
+PyCallThread.init do
+  # If you need to do anything to setup you venv, you can do it here
+  require 'pycall'
+end
+
+# We can safely call PyCall, even from a thread (or web request) using `PyCallThread.run`:
+Thread.new do
+  data_table = PyCallThread.run do
+    pandas = PyCall.import('pandas')
+    data = pandas.read_csv('https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv', sep: ';')
+    data.head().to_string()
+  end
+  puts "Data is:"
+  puts data_table
+end
+```
+
+Examples of using PyCall with webservers:
+
+- [Puma](./examples/puma)
+- Ruby on Rails: todo
 
 ## Installation
 
-Add this line to your application's Gemfile:
+Gemfile:
 
 ```ruby
 gem 'pycall_thread'
 ```
 
-And then execute:
-
-    $ bundle install
-
-Or install it yourself as:
-
-    $ gem install pycall_thread
-
-## Usage
-
-TODO: Write usage instructions here
-
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+After checking out the repo, run `bin/setup` to install dependencies. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
 To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
 
-## Contributing
-
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/pycall_thread.
+TODO: make run `rake test` run the tests
