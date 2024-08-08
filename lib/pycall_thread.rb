@@ -1,7 +1,9 @@
+# Provides a way to run PyCall code from multiple threads, see
+# PyCallThread.init and PyCallThread.run for more information.
 module PyCallThread
   @queue = Queue.new
 
-  VALID_UNSAFE_RETURN_VALUES = [:allow, :error, :warn]
+  VALID_UNSAFE_RETURN_VALUES = %i[allow error warn].freeze
 
   def self.init(unsafe_return: :error, &require_pycall_block)
     # Only safe to use PyCallThread if PyCall hasn't already been loaded
@@ -9,12 +11,10 @@ module PyCallThread
 
     @initialized = true
 
-    if VALID_UNSAFE_RETURN_VALUES.include?(unsafe_return)
-      @unsafe_return = unsafe_return
-    else
-      raise ArgumentError, "Invalid value for unsafe_return: #{unsafe_return}. Must be one of: #{VALID_UNSAFE_RETURN_VALUES.join(', ')}"
-    end
-    
+    raise ArgumentError, "Invalid value for unsafe_return: #{unsafe_return}. Must be one of: #{VALID_UNSAFE_RETURN_VALUES.join(", ")}" unless VALID_UNSAFE_RETURN_VALUES.include?(unsafe_return)
+
+    @unsafe_return = unsafe_return
+
     # Start the thread we will use to run code invoked with PyCallThread.run
     # If we've been passed a require_pycall_block, use that to require 'pycall'
     # instead of doing it directly.
@@ -32,16 +32,18 @@ module PyCallThread
     init unless @initialized
 
     result_queue = Queue.new
-    @queue << -> do
+    @queue << lambda {
       begin
         result_queue << { retval: block.call }
-      rescue => e
+      rescue StandardError => e
         result_queue << { exception: e }
       end
-    end
+    }
 
-    result = result_queue.pop
+    run_result(result_queue.pop)
+  end
 
+  def self.run_result
     if result[:exception]
       raise result[:exception]
     elsif python_object?(result[:retval])
@@ -69,14 +71,15 @@ module PyCallThread
     if require_pycall_block
       require_pycall_block.call
     else
-      require 'pycall'
+      require "pycall"
     end
 
     loop do
       block = @queue.pop
       break if block == :stop
+
       block.call
-    rescue => e
+    rescue StandardError => e
       puts "pycall_thread_loop(): exception in pycall_thread_loop #{e}"
       puts e.backtrace.join("\n")
     end
@@ -93,7 +96,7 @@ module PyCallThread
       PyCall::PyModuleWrapper,
       PyCall::PyObjectWrapper,
       PyCall::PyTypeObjectWrapper,
-      PyCall::PyPtr,
+      PyCall::PyPtr
     ].any? { |kind| obj.is_a?(kind) }
   end
 end

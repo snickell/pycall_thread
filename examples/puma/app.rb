@@ -17,7 +17,7 @@ class App
     winequality = PyCallThread.run do
       pandas = PyCall.import_module('pandas')
       data = pandas.read_csv('https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv', sep: ';')
-      data.to_html()
+      data.to_json()
     end
 
     [200, { 'Content-Type' => 'text/html' }, [winequality]]
