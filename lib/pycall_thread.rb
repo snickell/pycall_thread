@@ -22,7 +22,7 @@ module PyCallThread
     @initialized = true
   end
 
-  def require_pycall(&require_pycall_block)
+  def self.require_pycall(&require_pycall_block)
     # Only safe to use PyCallThread if PyCall hasn't already been loaded
     raise "PyCall::LibPython already exists: PyCall can't have been initialized already" if defined?(PyCall::LibPython)
 
