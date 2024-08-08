@@ -5,15 +5,15 @@ GEM
     puma (6.4.2)
       nio4r (~> 2.0)
     pycall (1.5.2)
-    pycall_thread (0.1.0)
+    pycall_thread (0.1.2)
       pycall
 
 PLATFORMS
   arm64-darwin-23
 
 DEPENDENCIES
-  puma
-  pycall_thread
+  puma (~> 6.4.2)
+  pycall_thread (~> 0.1.2)
 
 BUNDLED WITH
    2.2.33
