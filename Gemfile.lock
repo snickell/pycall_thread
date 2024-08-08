@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    pycall_thread (0.1.0)
+    pycall_thread (0.1.1)
       pycall
 
 GEM
@@ -11,13 +11,10 @@ GEM
     json (2.7.2)
     language_server-protocol (3.17.0.3)
     minitest (5.24.1)
-    nio4r (2.7.3)
     parallel (1.26.0)
     parser (3.3.4.2)
       ast (~> 2.4.1)
       racc
-    puma (6.4.2)
-      nio4r (~> 2.0)
     pycall (1.5.2)
     racc (1.8.1)
     rainbow (3.1.1)
@@ -47,7 +44,6 @@ PLATFORMS
 
 DEPENDENCIES
   minitest (~> 5.0)
-  puma (~> 6.4.1)
   pycall_thread!
   rake (~> 13.0)
   rubocop (~> 1.21)

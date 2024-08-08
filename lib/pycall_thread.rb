@@ -6,25 +6,35 @@ module PyCallThread
   VALID_UNSAFE_RETURN_VALUES = %i[allow error warn].freeze
 
   def self.init(unsafe_return: :error, &require_pycall_block)
-    # Only safe to use PyCallThread if PyCall hasn't already been loaded
-    raise "PyCall::LibPython already exists: PyCall can't have been initialized already" if defined?(PyCall::LibPython)
-
-    @initialized = true
-
     raise ArgumentError, "Invalid value for unsafe_return: #{unsafe_return}. Must be one of: #{VALID_UNSAFE_RETURN_VALUES.join(", ")}" unless VALID_UNSAFE_RETURN_VALUES.include?(unsafe_return)
 
     @unsafe_return = unsafe_return
 
     # Start the thread we will use to run code invoked with PyCallThread.run
+    @py_thread = Thread.new { pycall_thread_loop }
+
     # If we've been passed a require_pycall_block, use that to require 'pycall'
     # instead of doing it directly.
-    @py_thread = Thread.new { pycall_thread_loop(&require_pycall_block) }
+    require_pycall(&require_pycall_block)
 
-    at_exit do
-      stop_pycall_thread
+    at_exit { stop_pycall_thread }
+
+    @initialized = true
+  end
+
+  def require_pycall(&require_pycall_block)
+    # Only safe to use PyCallThread if PyCall hasn't already been loaded
+    raise "PyCall::LibPython already exists: PyCall can't have been initialized already" if defined?(PyCall::LibPython)
+
+    run do
+      # require 'pycall' or run a user-defined block that should do the same
+      if require_pycall_block
+        require_pycall_block.call
+      else
+        require "pycall"
+      end
+      nil
     end
-
-    nil
   end
 
   # Runs &block on the PyCall thread, and returns the result
@@ -64,15 +74,8 @@ module PyCallThread
     @py_thread.join
   end
 
-  def self.pycall_thread_loop(&require_pycall_block)
+  def self.pycall_thread_loop
     Thread.current.name = "pycall"
-
-    # require 'pycall' or run a user-defined block that should do the same
-    if require_pycall_block
-      require_pycall_block.call
-    else
-      require "pycall"
-    end
 
     loop do
       block = @queue.pop
