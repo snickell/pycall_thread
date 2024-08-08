@@ -12,14 +12,13 @@ module PyCallThread
 
     # Start the thread we will use to run code invoked with PyCallThread.run
     @py_thread = Thread.new { pycall_thread_loop }
+    @initialized = true
 
     # If we've been passed a require_pycall_block, use that to require 'pycall'
     # instead of doing it directly.
     require_pycall(&require_pycall_block)
 
     at_exit { stop_pycall_thread }
-
-    @initialized = true
   end
 
   def self.require_pycall(&require_pycall_block)
@@ -53,7 +52,7 @@ module PyCallThread
     run_result(result_queue.pop)
   end
 
-  def self.run_result
+  def self.run_result(result)
     if result[:exception]
       raise result[:exception]
     elsif python_object?(result[:retval])
