@@ -1,4 +1,4 @@
-require_relative '../../lib/pycall_thread/pycall_thread'
+require 'pycall_thread'
 
 PyCallThread.init do
   # Setup our local venv (using pdm, in .venv)
